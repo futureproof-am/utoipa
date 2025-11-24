@@ -1,0 +1,46 @@
+---
+source: utoipa-gen/tests/schema_derive_test.rs
+expression: "&value"
+---
+{
+  "properties": {
+    "optional_field": {
+      "description": "This is an optional field description",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "description": "This is an optional field description",
+          "properties": {
+            "value": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "required_field": {
+      "description": "This is a required field description",
+      "properties": {
+        "value": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "required_field"
+  ],
+  "type": "object"
+}

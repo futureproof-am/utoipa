@@ -1286,19 +1286,69 @@ impl ComponentSchema {
                         object_schema_reference.references =
                             quote! { <#rewritten_path as utoipa::ToSchema>::schemas(schemas) };
 
-                        let description_tokens = description_stream.to_token_stream();
-                        let schema = if default.is_some()
-                            || nullable
-                            || title.is_some()
-                            || !description_tokens.is_empty()
-                        {
+                        // Extract the actual description value (not the builder code)
+                        let description_value = description_stream.as_ref().and_then(|desc| {
+                            match desc {
+                                ComponentDescription::CommentAttributes(attributes) => {
+                                    if attributes.is_empty() {
+                                        None
+                                    } else {
+                                        Some(attributes.as_formatted_string().to_token_stream())
+                                    }
+                                }
+                                ComponentDescription::Description(description) => {
+                                    Some(description.to_token_stream())
+                                }
+                            }
+                        });
+
+                        // Check if we need oneOf wrapping (for nullable, default, or title)
+                        let needs_one_of = default.is_some() || nullable || title.is_some();
+
+                        let schema = if needs_one_of {
+                            // When we need oneOf wrapper, check if we should override the inner item's description
+                            let inner_item = if let Some(desc_value) = description_value {
+                                // Override the type's description in the inner schema
+                                quote_spanned! {type_path.span()=>
+                                    {
+                                        let __schema = #items_tokens;
+                                        match __schema {
+                                            utoipa::openapi::RefOr::T(schema) => {
+                                                utoipa::openapi::RefOr::T(
+                                                    schema.with_description(Some(#desc_value))
+                                                )
+                                            },
+                                            reference => reference
+                                        }
+                                    }
+                                }
+                            } else {
+                                items_tokens.clone()
+                            };
+
+                            // Use oneOf wrapper for nullable, default, or title
                             quote_spanned! {type_path.span()=>
                                 utoipa::openapi::schema::OneOfBuilder::new()
                                     #nullable_item
-                                    .item(#items_tokens)
+                                    .item(#inner_item)
                                 #title_tokens
                                 #default_tokens
                                 #description_stream
+                            }
+                        } else if let Some(desc_value) = description_value {
+                            // Override type's description without wrapping in oneOf
+                            quote_spanned! {type_path.span()=>
+                                {
+                                    let __schema = #items_tokens;
+                                    match __schema {
+                                        utoipa::openapi::RefOr::T(schema) => {
+                                            utoipa::openapi::RefOr::T(
+                                                schema.with_description(Some(#desc_value))
+                                            )
+                                        },
+                                        reference => reference
+                                    }
+                                }
                             }
                         } else {
                             items_tokens

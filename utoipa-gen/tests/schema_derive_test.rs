@@ -3104,6 +3104,29 @@ fn derive_struct_inline_with_description() {
 }
 
 #[test]
+fn derive_struct_inline_with_description_and_option() {
+    #[derive(utoipa::ToSchema)]
+    #[allow(unused)]
+    struct Bar {
+        value: i32,
+    }
+
+    let value = api_doc! {
+        struct BarInlined {
+            /// This is a required field description
+            #[schema(inline)]
+            required_field: Bar,
+
+            /// This is an optional field description
+            #[schema(inline)]
+            optional_field: Option<Bar>,
+        }
+    };
+
+    assert_json_snapshot!(&value);
+}
+
+#[test]
 fn schema_manual_impl() {
     #![allow(unused)]
 

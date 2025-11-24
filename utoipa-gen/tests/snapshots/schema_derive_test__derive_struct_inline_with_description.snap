@@ -1,7 +1,6 @@
 ---
 source: utoipa-gen/tests/schema_derive_test.rs
 expression: "&value"
-snapshot_kind: text
 ---
 {
   "properties": {
@@ -18,19 +17,15 @@ snapshot_kind: text
     },
     "with_description": {
       "description": "This is description",
-      "oneOf": [
-        {
-          "properties": {
-            "name": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "name"
-          ],
-          "type": "object"
+      "properties": {
+        "name": {
+          "type": "string"
         }
-      ]
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
     }
   },
   "required": [

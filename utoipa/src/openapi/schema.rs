@@ -304,6 +304,32 @@ impl Default for Schema {
     }
 }
 
+impl Schema {
+    /// Sets the description on the schema, overriding any existing description.
+    /// This works with all Schema variants.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use utoipa::openapi::schema::{Schema, Object};
+    /// let schema = Schema::Object(Object::default())
+    ///     .with_description(Some("This is a custom description"));
+    /// ```
+    pub fn with_description<S: Into<String>>(mut self, description: Option<S>) -> Self {
+        if let Some(desc) = description {
+            let desc_string = desc.into();
+            match &mut self {
+                Schema::Object(obj) => obj.description = Some(desc_string),
+                Schema::OneOf(one_of) => one_of.description = Some(desc_string),
+                Schema::AllOf(all_of) => all_of.description = Some(desc_string),
+                Schema::AnyOf(any_of) => any_of.description = Some(desc_string),
+                Schema::Array(array) => array.description = Some(desc_string),
+            }
+        }
+        self
+    }
+}
+
 /// OpenAPI [Discriminator][discriminator] object which can be optionally used together with
 /// [`OneOf`] composite object.
 ///
